@@ -1,0 +1,140 @@
+.navbar-toggler {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.top-row {
+    height: 3.5rem;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.navbar-brand {
+    font-size: 1.1rem;
+}
+
+.oi {
+    width: 2rem;
+    font-size: 1.1rem;
+    vertical-align: text-top;
+    top: -2px;
+}
+
+.nav-item {
+    font-size: 0.9rem;
+    padding-bottom: 0.5rem;
+}
+
+    .nav-item:first-of-type {
+        padding-top: 1rem;
+    }
+
+    .nav-item:last-of-type {
+        padding-bottom: 1rem;
+    }
+
+    .nav-item ::deep a {
+        color: #d7d7d7;
+        border-radius: 4px;
+        height: 3rem;
+        display: flex;
+        align-items: center;
+        line-height: 3rem;
+    }
+
+        .nav-item ::deep a.active {
+            background-color: rgba(255,255,255,0.25);
+            color: white;
+        }
+
+        .nav-item ::deep a:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+@media (min-width: 641px) {
+    .navbar-toggler {
+        display: none;
+    }
+
+    .collapse {
+        /* Never collapse the sidebar for wide screens */
+        display: block;
+    }
+}
+/* Top Navigation Bar */
+.navbar-dark {
+    background-color: #1f1f1f; /* Dark background */
+    border-bottom: 2px solid #6a0dad; /* Purple accent */
+    padding: 15px;
+}
+
+.navbar h3 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #e0e0e0; /* Light gray text */
+}
+
+/* Sidebar Container */
+.sidebar {
+    background-color: #1f1f1f; /* Dark background for sidebar */
+    height: 100vh;
+    padding-top: 10px;
+    color: #e0e0e0;
+    width: 250px;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Sidebar Links */
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    font-size: 1rem;
+    color: #b388ff; /* Soft purple */
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+    .sidebar-link span {
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+
+    .sidebar-link:hover {
+        background-color: #6a0dad; /* Purple background on hover */
+        color: #ffffff; /* White text on hover */
+    }
+
+    /* Active and Danger Links */
+    .sidebar-link.active {
+        background-color: #6a0dad;
+        color: #ffffff;
+    }
+
+    .sidebar-link.text-danger:hover {
+        background-color: #a60000;
+        color: #ffffff;
+    }
+
+/* Sidebar Header */
+.nav-item h5 {
+    margin-bottom: 0;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+    }
+
+    .navbar h3 {
+        font-size: 1.2rem;
+    }
+
+    .sidebar-link {
+        font-size: 0.9rem;
+        padding: 10px 15px;
+    }
+}

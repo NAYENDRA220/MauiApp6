@@ -1,0 +1,440 @@
+﻿@page "/debts"
+@using MauiApp6.Components.Layout;
+<nav class="navbar justify-content-between">
+    <h1>Debts</h1>
+    <button class="btn btn-primary" type="button" @onclick="OpenAddDebtDialog">
+        <span class="oi oi-plus" /> Add
+    </button>
+</nav>
+
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class='nav-link btn @(_tabFilter == "All" ? "active" : "")' @onclick='()=>TabFilter("All")'>All</a>
+    </li>
+    <li class="nav-item">
+        <a class='nav-link btn @(_tabFilter == "Due" ? "active" : "")' @onclick='()=>TabFilter("Due")'>Due</a>
+    </li>
+    <li class="nav-item">
+        <a class='nav-link btn @(_tabFilter == "Paid" ? "active" : "")' @onclick='()=>TabFilter("Paid")'>Paid</a>
+    </li>
+</ul>
+
+<div class="d-flex gap-3 my-3">
+    <div class="form-floating">
+        <select class="form-select" @bind="_selectedDebtType">
+            <option value="All">All Types</option>
+            @foreach (var type in Enum.GetValues(typeof(DebtType)))
+            {
+                <option value="@type">@type</option>
+            }
+        </select>
+        <label class="labell">Debt Type</label>
+    </div>
+
+    <div class="form-floating">
+        <select class="form-select" @bind="_selectedCategory">
+            <option value="All">All Categories</option>
+            @foreach (var category in _availableCategories)
+            {
+                <option value="@category">@category</option>
+            }
+        </select>
+        <label class="labell">Filter by Category</label>
+    </div>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                <div class="d-flex">
+                    Status
+                    <a class='btn text-@(_sortBy == "status" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
+                       @onclick='()=>SortByHandler("status")'>
+                        <span class='oi oi-sort-@(_sortBy == "status" ? _sortDirection : "ascending")' />
+                    </a>
+                </div>
+            </th>
+            <th>
+                <div class="d-flex">
+                    Debt Name
+                    <input type="search" class="form-control search" placeholder="Search" @oninput="SearchDebtName" />
+                    <a class='btn text-@(_sortBy == "debtName" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
+                       @onclick='()=>SortByHandler("debtName")'>
+                        <span class='oi oi-sort-@(_sortBy == "debtName" ? _sortDirection : "ascending")' />
+                    </a>
+                </div>
+            </th>
+            <th>
+                <div class="d-flex">
+                    Type
+                    <a class='btn text-@(_sortBy == "debtType" ? "primary" : "secondary")' @onclick='()=>SortByHandler("debtType")'>
+                        <span class='oi oi-sort-@(_sortBy == "debtType" ? _sortDirection : "ascending")' />
+                    </a>
+                </div>
+            </th>
+            <th>
+                <div class="d-flex">
+                    Amount
+                    <a class='btn text-@(_sortBy == "amount" ? "primary" : "secondary")' @onclick='()=>SortByHandler("amount")'>
+                        <span class='oi oi-sort-@(_sortBy == "amount" ? _sortDirection : "ascending")' />
+                    </a>
+                </div>
+            </th>
+            <th>Categories</th>
+            <th>
+                <div class="d-flex">
+                    Due Date
+                    <a class='btn text-@(_sortBy == "dueDate" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
+                       @onclick='()=>SortByHandler("dueDate")'>
+                        <span class='oi oi-sort-@(_sortBy == "dueDate" ? _sortDirection : "ascending")' />
+                    </a>
+                </div>
+            </th>
+            <th>
+                <div class="d-flex">
+                    Created At
+                    <a class='btn text-@(_sortBy == "createdAt" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
+                       @onclick='()=>SortByHandler("createdAt")'>
+                        <span class='oi oi-sort-@(_sortBy == "createdAt" ? _sortDirection : "ascending")' />
+                    </a>
+                </div>
+            </th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+      @{
+            IEnumerable<DebtItem> debtList = _debts;
+
+            if (_selectedDebtType != "All")
+            {
+                var type = Enum.Parse<DebtType>(_selectedDebtType);
+                debtList = debtList.Where(t => t.DebtType == type);
+            }
+
+            if (_selectedCategory != "All")
+            {
+                debtList = debtList.Where(t => t.Categories.Contains(_selectedCategory));
+            }
+
+            if (_sortBy == "status")
+            {
+                debtList = _sortDirection == "ascending" ? debtList.OrderBy(t => t.IsPaid) : debtList.OrderByDescending(t => t.IsPaid);
+            }
+            else if (_sortBy == "debtName")
+            {
+                debtList = _sortDirection == "ascending" ? debtList.OrderBy(t => t.DebtName) : debtList.OrderByDescending(t => t.DebtName);
+            }
+            else if (_sortBy == "dueDate")
+            {
+                debtList = _sortDirection == "ascending" ? debtList.OrderBy(t => t.DueDate) : debtList.OrderByDescending(t => t.DueDate);
+            }
+            else if (_sortBy == "createdAt")
+            {
+                debtList = _sortDirection == "ascending" ? debtList.OrderBy(t => t.CreatedAt) : debtList.OrderByDescending(t => t.CreatedAt);
+            }
+
+            if (_tabFilter == "Due")
+            {
+                debtList = debtList.Where(t => !t.IsPaid);
+            }
+            else if (_tabFilter == "Paid")
+            {
+                debtList = debtList.Where(t => t.IsPaid);
+            }
+
+            foreach (var debtItem in debtList)
+            {
+                <tr>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input me-0" type="checkbox" checked="@debtItem.IsPaid"
+                                   @onchange='()=>TogglePaid(debtItem)' />
+                        </div>
+                    </td>
+                    <td class='@(debtItem.IsPaid ? "text-decoration-line-through" : "")'>@debtItem.DebtName</td>
+                    <td>@debtItem.DebtType</td>
+                    <td>@debtItem.Amount.ToString("C")</td>
+                    <td>@string.Join(", ", @debtItem.Categories)</td>
+                    <td>
+                        @{
+                            bool isToday = !debtItem.IsPaid && debtItem.DueDate == DateTime.Today;
+                            bool isOlder = !debtItem.IsPaid && debtItem.DueDate < DateTime.Today;
+                            <p class='small mb-0 @(isToday ? "text-warning" : isOlder ? "text-danger" : "")'>
+                                @if (isToday || isOlder)
+                                {
+                                    <span class="oi oi-warning mr-3" />
+                                }
+                                @debtItem.DueDate.ToString("MMM dd, yyyy")
+                            </p>
+                        }
+                    </td>
+                    <td>
+                        <p class="small mb-0">
+                            @debtItem.CreatedAt.ToString("MMM dd, yyyy h:mm tt")
+                        </p>
+                    </td>
+                    <td>
+                        <button disabled="@debtItem.IsPaid" class="btn btn-outline-secondary" type="button"
+                                @onclick="()=>OpenEditDebtDialog(debtItem)">
+                            <span class="oi oi-pencil" /> Edit
+                        </button>
+                        <button class="btn btn-outline-danger" type="button" @onclick="()=>OpenDeleteDebtDialog(debtItem)">
+                            <span class="oi oi-delete" /> Delete
+                        </button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@if (_showEditDebtDialog)
+{
+   <ModalDialog Title="@_dialogTitle" OnClose="@OnEditDebtDialogClose" OkLabel="@_dialogOkLabel">
+    <div class="modal-container">
+        <div class="form-floating">
+            <input id="debtName" type="text" class="form-control" @bind="_debtModel.DebtName" placeholder="Debt Name" />
+            <label for="debtName">Debt Name</label>
+        </div>
+        <div class="form-floating mb-3">
+            <select class="form-select" @bind="_debtModel.DebtType">
+                @foreach (var type in Enum.GetValues(typeof(DebtType)))
+                {
+                    <option value="@type">@type</option>
+                }
+            </select>
+            <label>Debt Type</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input type="number" step="0.01" class="form-control" @bind="_debtModel.Amount" placeholder="Amount" />
+            <label>Amount</label>
+        </div>
+        <div class="mb-3">
+            <label>Categories</label
+         <div class="d-flex flex-wrap gap-2">
+                @foreach (var category in _availableCategories)
+                {
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox"
+                               checked="@(_debtModel.Categories.Contains(category))"
+                               @onchange="@(e => ToggleCategory(category, (bool)e.Value))" />
+                        <label class="form-check-label">@category</label>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="form-floating">
+            <label for="dueDate">Due Date</label>
+            <input id="dueDate" type="date" min='@DateTime.Today.ToString("yyyy-MM-dd")'
+                   value='@_debtModel.DueDate.ToString("yyyy-MM-dd")' @onchange="updateDate" class="form-control text-left"
+                   placeholder="Due Date">
+        </div>
+
+        @if (!string.IsNullOrEmpty(_editDebtErrorMessage))
+        {
+            <AlertMessage Type="danger" Message="@_editDebtErrorMessage" />
+        }
+    </div>
+    </ModalDialog>
+}
+
+@if (_showDeleteDebtDialog)
+{
+    <ModalDialog Title="Delete Debt" OnClose="@OnDeleteDebtDialogClose" OkLabel="Confirm">
+        <p>Are you sure you want to delete <strong>@_deleteDebt.DebtName</strong> debt?</p>
+        @if (!string.IsNullOrEmpty(_deleteDebtErrorMessage))
+        {
+            <AlertMessage Type="danger" Message="@_deleteDebtErrorMessage" />
+        }
+    </ModalDialog>
+}
+
+@code {
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+    private bool _showEditDebtDialog { get; set; }
+    private bool _showDeleteDebtDialog { get; set; }
+    private List<DebtItem> _debts { get; set; }
+    private DebtItem _deleteDebt { get; set; }
+    private string _dialogTitle { get; set; }
+    private string _dialogOkLabel { get; set; }
+    private string _editDebtErrorMessage { get; set; }
+    private string _deleteDebtErrorMessage { get; set; }
+    private DebtItem _debtModel { get; set; }
+    private string _tabFilter = "All";
+    private string _sortBy = "dueDate";
+    private string _sortDirection = "ascending";
+
+    protected override void OnInitialized()
+    {
+        _debts = DebtService.GetAll(_globalState.CurrentUser.UserId);
+    }
+
+    private void SortByHandler(string sortByName)
+    {
+        if (_sortBy == sortByName)
+        {
+            _sortDirection = _sortDirection == "ascending" ? "descending" : "ascending";
+        }
+        else
+        {
+            _sortBy = sortByName;
+            _sortDirection = "ascending";
+        }
+    }
+
+    private List<string> _availableCategories = new()
+    {
+        "Personal", "Business", "Home", "Education", "Vehicle", "Credit Card", "Other"
+    };
+
+    private string _selectedDebtType = "All";
+    private string _selectedCategory = "All";
+
+    private void ToggleCategory(string category, bool isChecked)
+    {
+        if (isChecked && !_debtModel.Categories.Contains(category))
+        {
+            _debtModel.Categories.Add(category);
+        }
+        else if (!isChecked && _debtModel.Categories.Contains(category))
+        {
+            _debtModel.Categories.Remove(category);
+        }
+    }
+
+    private void OpenAddDebtDialog()
+    {
+        _dialogTitle = "Add Debt";
+        _dialogOkLabel = "Add";
+        _debtModel = new DebtItem();
+        _debtModel.Id = Guid.Empty;
+        _showEditDebtDialog = true;
+    }
+
+    private void SearchDebtName(ChangeEventArgs e)
+    {
+        var searchTerm = e.Value.ToString();
+        if (!string.IsNullOrEmpty(searchTerm) && searchTerm.Length > 2)
+        {
+            _debts = DebtService.GetAll(_globalState.CurrentUser.UserId).Where(t =>
+            t.DebtName.ToLower().Contains(searchTerm.ToLower())).ToList();
+        }
+        else
+        {
+            _debts = DebtService.GetAll(_globalState.CurrentUser.UserId);
+        }
+    }
+
+    private void OpenEditDebtDialog(DebtItem editDebt)
+    {
+        _dialogTitle = "Edit Debt";
+        _dialogOkLabel = "Save";
+        _debtModel = editDebt;
+        _showEditDebtDialog = true;
+    }
+
+    private void OpenDeleteDebtDialog(DebtItem debtItem)
+    {
+        _deleteDebt = debtItem;
+        _showDeleteDebtDialog = true;
+    }
+
+    private void updateDate(ChangeEventArgs e)
+    {
+        _debtModel.DueDate = DateTime.Parse(e.Value.ToString());
+    }
+
+    private void OnEditDebtDialogClose(bool isCancel)
+{
+    if (isCancel)
+    {
+        _showEditDebtDialog = false;
+    }
+    else
+    {
+        try
+        {
+            _editDebtErrorMessage = "";
+            if (_debtModel.Id == Guid.Empty)
+            {
+                // Creating new debt
+                _debts = DebtService.Create(
+                    _globalState.CurrentUser.UserId,
+                    _debtModel.DebtName,
+                    _debtModel.DueDate,
+                    _debtModel.DebtType,
+                    _debtModel.Amount,
+                    _debtModel.Categories
+                );
+            }
+            else
+            {
+                // Updating existing debt
+                _debts = DebtService.Update(
+                    _globalState.CurrentUser.UserId,
+                    _debtModel.Id,
+                    _debtModel.DebtName,
+                    _debtModel.DueDate,
+                    _debtModel.IsPaid,
+                    _debtModel.DebtType,
+                    _debtModel.Amount,
+                    _debtModel.Categories
+                );
+            }
+            _showEditDebtDialog = false;
+        }
+        catch (Exception e)
+        {
+            _editDebtErrorMessage = e.Message;
+        }
+    }
+}
+
+    private void OnDeleteDebtDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+            _showDeleteDebtDialog = false;
+            _deleteDebt = null;
+        }
+        else
+        {
+            try
+            {
+                _deleteDebtErrorMessage = "";
+                _debts = DebtService.Delete(_globalState.CurrentUser.UserId, _deleteDebt.Id);
+                _showDeleteDebtDialog = false;
+                _deleteDebt = null;
+            }
+            catch (Exception e)
+            {
+                _deleteDebtErrorMessage = e.Message;
+            }
+        }
+    }
+
+    private void TabFilter(string status)
+    {
+        _tabFilter = status;
+    }
+
+    private void TogglePaid(DebtItem debt)
+{
+    debt.IsPaid = !debt.IsPaid;
+    // Using the passed debt parameter instead of _debtModel
+    _debts = DebtService.Update(
+        _globalState.CurrentUser.UserId, 
+        debt.Id,  // Changed from _debtModel.Id
+        debt.DebtName,  // Changed from _debtModel.DebtName
+        debt.DueDate,  // Changed from _debtModel.DueDate
+        debt.IsPaid,  // Changed from _debtModel.IsPaid
+        debt.DebtType,  // Changed from _debtModel.DebtType
+        debt.Amount,  // Changed from _debtModel.Amount
+        debt.Categories  // Changed from _debtModel.Categories
+    );
+}
+}  

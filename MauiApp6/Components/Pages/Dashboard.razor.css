@@ -1,0 +1,56 @@
+﻿/* Card Styling */
+.balance-card,
+.debt-card {
+    background-color: #2a2a2a; /* Dark background */
+    border: 1px solid #6a0dad; /* Purple border */
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
+    color: #e0e0e0; /* Light text */
+}
+
+    .balance-card .card-title,
+    .debt-card .card-title {
+        font-size: 1.25rem;
+        margin-bottom: 20px;
+        color: #b388ff; /* Purple accent */
+    }
+
+/* Table Styling */
+.table-dark {
+    background-color: #3a3a3a; /* Darker table background */
+    color: #e0e0e0; /* Light text */
+}
+
+    .table-dark thead th {
+        background-color: #4a4a4a; /* Slightly lighter header background */
+        color: #b388ff; /* Purple header text */
+        border-bottom: 2px solid #6a0dad; /* Purple border */
+    }
+
+    .table-dark tbody tr:hover {
+        background-color: #4a4a4a; /* Highlight on hover */
+    }
+
+    .table-dark tbody td {
+        border-top: 1px solid #6a0dad; /* Purple row border */
+    }
+
+/* Text Colors */
+.text-success {
+    color: #28a745 !important; /* Bright green */
+}
+
+.text-danger {
+    color: #dc3545 !important; /* Bright red */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 15px;
+    }
+
+    .table {
+        font-size: 0.9rem;
+    }
+}

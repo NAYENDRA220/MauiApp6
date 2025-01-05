@@ -1,0 +1,161 @@
+﻿@page "/dashboard"
+@using MauiApp6.Model;
+@using MauiApp6.Services;
+
+<div class="container mt-4">
+    <h3 class="text-primary mb-4">Financial Overview</h3>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card bg-success text-white mb-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Total Income</h5>
+                    <h2>@GetTotalByType(TransactionType.Income).ToString("C")</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white mb-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Total Expense</h5>
+                    <h2>@GetTotalByType(TransactionType.Expense).ToString("C")</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card bg-info text-white mb-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Total Paid Debts</h5>
+                    <h2>@GetTotalPaidDebts().ToString("C")</h2>
+                    <div class="small mt-2">
+                        Total Paid Items: @_debts.Count(d => d.IsPaid)
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-secondary text-white mb-3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Total Unpaid Debts</h5>
+                    <h2>@GetTotalUnpaidDebts().ToString("C")</h2>
+                    <div class="small mt-2">
+                        Total Unpaid Items: @_debts.Count(d => !d.IsPaid)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-4 balance-card">
+        <div class="card-body">
+            <h5 class="card-title text-light">Available Balance</h5>
+            <h3 class="@(GetAvailableBalance() >= 0 ? "text-success" : "text-danger")">
+                @GetAvailableBalance().ToString("C")
+            </h3>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card debt-card">
+                <div class="card-body">
+                    <h5 class="card-title text-light">Debt Breakdown</h5>
+                    <table class="table table-dark table-hover debt-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Total Amount</th>
+                                <th>Paid</th>
+                                <th>Unpaid</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (DebtType debtType in Enum.GetValues(typeof(DebtType)))
+                            {
+                                <tr>
+                                    <td>@debtType</td>
+                                    <td>@GetTotalDebtsByType(debtType).ToString("C")</td>
+                                    <td class="text-success">@GetPaidDebtsByType(debtType).ToString("C")</td>
+                                    <td class="text-danger">@GetUnpaidDebtsByType(debtType).ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@code {
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+    private List<TransactionItem> _transactions = new();
+    private List<DebtItem> _debts = new();
+
+    protected override void OnInitialized()
+    {
+        _transactions = TransactionService.GetAll(_globalState.CurrentUser.UserId);
+        _debts = DebtService.GetAll(_globalState.CurrentUser.UserId);
+    }
+
+    private decimal GetTotalByType(TransactionType type)
+    {
+        return _transactions
+            .Where(t => t.TransactionType == type)
+            .Sum(t => t.Amount);
+    }
+
+    private decimal GetTotalPaidDebts()
+    {
+        return _debts
+            .Where(d => d.IsPaid)
+            .Sum(d => d.Amount);
+    }
+
+    private decimal GetTotalUnpaidDebts()
+    {
+        return _debts
+            .Where(d => !d.IsPaid)
+            .Sum(d => d.Amount);
+    }
+
+    private decimal GetTotalDebtsByType(DebtType type)
+    {
+        return _debts
+            .Where(d => d.DebtType == type)
+            .Sum(d => d.Amount);
+    }
+
+    private decimal GetPaidDebtsByType(DebtType type)
+    {
+        return _debts
+            .Where(d => d.DebtType == type && d.IsPaid)
+            .Sum(d => d.Amount);
+    }
+
+    private decimal GetUnpaidDebtsByType(DebtType type)
+    {
+        return _debts
+            .Where(d => d.DebtType == type && !d.IsPaid)
+            .Sum(d => d.Amount);
+    }
+
+    private decimal GetAvailableBalance()
+    {
+        decimal transactionBalance = GetTotalByType(TransactionType.Income) -
+                                   GetTotalByType(TransactionType.Expense);
+
+        decimal paidDebts = _debts
+            .Where(d => d.IsPaid && d.DebtType == DebtType.Payment)
+            .Sum(d => d.Amount);
+
+        decimal unpaidLoans = _debts
+            .Where(d => !d.IsPaid && d.DebtType == DebtType.Loan)
+            .Sum(d => d.Amount);
+
+        return transactionBalance - paidDebts + unpaidLoans;
+    }
+}

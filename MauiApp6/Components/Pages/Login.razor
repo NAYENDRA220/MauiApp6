@@ -1,0 +1,34 @@
+﻿@page "/login"
+
+<div class="lbody">
+    <div class="login">
+        <form class="text-center" @onsubmit="LoginHandler">
+            <h1 >Please Login</h1>
+            <div class="form-floating ">
+                <input type="text" class="form-control user" @bind="_username" placeholder="Username" />
+                <label>Username</label>
+            </div>
+            <div class="form-floating ">
+                <input type="password" class="form-control password" @bind="_password" placeholder="Password" />
+                <label >Password</label>
+            </div>
+            <div class="form-floating">
+                <select class="form-control" @bind="_selectedCurrency">
+                    @foreach (var currency in _currencies)
+                    {
+                        <option value="@currency">@currency</option>
+                    }
+                </select>
+                <label>Currency</label>
+            </div>
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <AlertMessage Type="danger" Message="@_errorMessage" />
+            }
+            <button class="w-100 btn btn-lg button" type="submit">
+                 Login
+            </button>
+        </form>
+    </div>
+</div>
+

@@ -1,0 +1,14 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MauiApp6.Base
+{
+    public enum Currency
+    {  
+        NPR = 0,
+        USD=1,
+    }
+}

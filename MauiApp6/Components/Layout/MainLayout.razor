@@ -1,0 +1,51 @@
+﻿@inherits LayoutComponentBase
+@using MauiApp6.Base
+@using MauiApp6.Model
+
+
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<style>
+    .page{
+        background-color: #121212; /* Black background */
+        color: #e0e0e0; /* Light gray text for contrast */
+        font-family: 'Roboto', sans-serif;
+    }
+</style>
+<div class="page">
+
+    @if (_globalState.CurrentUser != null)
+    {
+        <div class="sidebar">
+            <NavMenu Username="@_globalState.CurrentUser.Username" UserRole="@_globalState.CurrentUser.Currency" LogoutHandler="LogoutHandler" />
+        </div>
+    }
+
+    <main>
+        <article class="content px-4">
+            <CascadingValue Value="@_globalState">
+                @Body
+            </CascadingValue>
+        </article>
+    </main>
+</div>
+
+@code {
+
+    private GlobalState _globalState = new();
+
+    protected override void OnInitialized()
+    {
+        UserService.SeedUsers();
+    }
+
+    private void LogoutHandler()
+    {
+        _globalState.CurrentUser = null;
+
+        Nav.NavigateTo("/login");
+    }
+}
+    
