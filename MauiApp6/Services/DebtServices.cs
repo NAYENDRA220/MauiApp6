@@ -6,10 +6,10 @@ namespace MauiApp6.Services
 {
     public static class DebtService
     {
-        private static void SaveAll(Guid Id, List<DebtItem> debts)
+        private static void SaveAll(Guid userId, List<DebtItem> debts)
         {
             string appDataDirectoryPath = Utils.GetAppDirectoryPath();
-            string debtsFilePath = Utils.GetDebtsFilePath(Id);
+            string debtsFilePath = Utils.GetDebtsFilePath(userId);
             if (!Directory.Exists(appDataDirectoryPath))
             {
                 Directory.CreateDirectory(appDataDirectoryPath);
@@ -105,13 +105,41 @@ namespace MauiApp6.Services
                     throw new Exception("Debt not found.");
                 }
 
-                // Only check balance for payment type AND when newly marking as paid
-                if (debtType == DebtType.Payment && !debtToUpdate.IsPaid && isPaid)
+                if (!debtToUpdate.IsPaid && isPaid)
                 {
-                    decimal overallBalance = CalculateOverallBalance(userId);
-                    if (overallBalance < amount)
+                    try
                     {
-                        throw new Exception($"Insufficient overall balance. Available: {overallBalance:C}, Required: {amount:C}");
+                        decimal overallBalance = CalculateOverallBalance(userId);
+                        if (overallBalance < amount)
+                        {
+                            // Create a user-friendly error message
+                            string errorMessage = $"Unable to mark debt as paid.\nAvailable Balance: {overallBalance:C}\nRequired Amount: {amount:C}\n\nPlease ensure sufficient funds are available before marking the debt as paid.";
+
+                            // Use MAUI's built-in dialog to show the error
+                            Application.Current.MainPage.Dispatcher.Dispatch(async () =>
+                            {
+                                await Application.Current.MainPage.DisplayAlert(
+                                    "Insufficient Funds",
+                                    errorMessage,
+                                    "OK"
+                                );
+                            });
+
+                            return debts; // Return unchanged debt list
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Handle any calculation errors gracefully
+                        Application.Current.MainPage.Dispatcher.Dispatch(async () =>
+                        {
+                            await Application.Current.MainPage.DisplayAlert(
+                                "Error",
+                                "Unable to verify balance. Please try again later.",
+                                "OK"
+                            );
+                        });
+                        return debts;
                     }
                 }
 

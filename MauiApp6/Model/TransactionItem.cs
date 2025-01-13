@@ -1,6 +1,4 @@
 ﻿using MauiApp6.Base;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 namespace MauiApp6.Model
 {
@@ -9,7 +7,7 @@ namespace MauiApp6.Model
         public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required(ErrorMessage = "Please provide the task name.")]
-        public string? TaskName { get; set; }
+        public string? TransactionName { get; set; }
 
         [Required(ErrorMessage = "Please specify transaction type.")]
         public TransactionType TransactionType { get; set; }

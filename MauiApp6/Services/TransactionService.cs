@@ -1,6 +1,7 @@
 ﻿
 using MauiApp6.Base;
 using MauiApp6.Model;
+using Microsoft.AspNetCore.Components;
 using System.Text.Json;
 
 
@@ -8,7 +9,7 @@ namespace MauiApp6.Services;
 
 public static class TransactionService
 {
-    private static void SaveAll(Guid Id, List<TransactionItem> todos)
+    private static void SaveAll(Guid Id, List<TransactionItem> transactions)
     {
         string appDataDirectoryPath = Utils.GetAppDirectoryPath();
         string todosFilePath = Utils.GetTodosFilePath(Id);
@@ -18,7 +19,7 @@ public static class TransactionService
             Directory.CreateDirectory(appDataDirectoryPath);
         }
 
-        var json = JsonSerializer.Serialize(todos);
+        var json = JsonSerializer.Serialize(transactions);
         File.WriteAllText(todosFilePath, json);
     }
 
@@ -35,9 +36,11 @@ public static class TransactionService
         return JsonSerializer.Deserialize<List<TransactionItem>>(json);
     }
 
-    public static List<TransactionItem> Create(Guid userId, string taskName, DateTime dueDate,
+    public static List<TransactionItem> Create(Guid userId, string TransactionName, DateTime dueDate,
       TransactionType transactionType, decimal amount, List<string> tags, string notes)
     {
+
+       
         if (dueDate < DateTime.Today)
         {
             throw new Exception("Due date must be in the future.");
@@ -46,10 +49,10 @@ public static class TransactionService
         // For expenses, check if sufficient balance exists
         if (transactionType == TransactionType.Expense)
         {
-            var transactions = GetAll(userId);
-            decimal balance = transactions.Where(t => t.TransactionType == TransactionType.Income).Sum(t => t.Amount) +
-                             transactions.Where(t => t.TransactionType == TransactionType.Debt).Sum(t => t.Amount) -
-                             transactions.Where(t => t.TransactionType == TransactionType.Expense).Sum(t => t.Amount);
+            var trans = GetAll(userId);
+            decimal balance = trans.Where(t => t.TransactionType == TransactionType.Income).Sum(t => t.Amount) +
+                             trans.Where(t => t.TransactionType == TransactionType.Debt).Sum(t => t.Amount) -
+                             trans.Where(t => t.TransactionType == TransactionType.Expense).Sum(t => t.Amount);
 
             if (balance < amount)
             {
@@ -57,10 +60,10 @@ public static class TransactionService
             }
         }
 
-        List<TransactionItem> todos = GetAll(userId);
-        todos.Add(new TransactionItem
+        List<TransactionItem> transactions = GetAll(userId);
+        transactions.Add(new TransactionItem
         {
-            TaskName = taskName,
+            TransactionName = TransactionName,
             DueDate = dueDate,
             CreatedBy = userId,
             TransactionType = transactionType,
@@ -68,23 +71,24 @@ public static class TransactionService
             Tags = tags,
              Notes = notes
         });
-        SaveAll(userId, todos);
-        return todos;
+        SaveAll(userId, transactions);
+        return transactions;
+       
     }
 
     public static List<TransactionItem> Delete(Guid userId, Guid id)
     {
-        List<TransactionItem> todos = GetAll(userId);
-        TransactionItem todo = todos.FirstOrDefault(x => x.Id == id);
+        List<TransactionItem> transactions = GetAll(userId);
+        TransactionItem transaction = transactions.FirstOrDefault(x => x.Id == id);
 
-        if (todo == null)
+        if (transactions == null)
         {
             throw new Exception("Todo not found.");
         }
 
-        todos.Remove(todo);
-        SaveAll(userId, todos);
-        return todos;
+        transactions.Remove(transaction);
+        SaveAll(userId, transactions);
+        return transactions;
     }
 
     public static void DeleteByUserId(Guid userId)
@@ -96,7 +100,7 @@ public static class TransactionService
         }
     }
 
-    public static List<TransactionItem> Update(Guid userId, Guid id, string taskName,
+    public static List<TransactionItem> Update(Guid userId, Guid id, string TransactionName,
     DateTime dueDate, bool isDone, TransactionType transactionType, decimal amount, List<string> tags, string notes)
     {
         List<TransactionItem> todos = GetAll(userId);
@@ -107,7 +111,7 @@ public static class TransactionService
             throw new Exception("Todo not found.");
         }
 
-        todoToUpdate.TaskName = taskName;
+        todoToUpdate.TransactionName = TransactionName;
         todoToUpdate.IsDone = isDone;
         todoToUpdate.DueDate = dueDate;
         todoToUpdate.TransactionType = transactionType;

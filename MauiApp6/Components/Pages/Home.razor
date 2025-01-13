@@ -1,8 +1,10 @@
 ﻿@page "/home"
 @using MauiApp6.Components.Layout;
+
+
 <nav class="navbar  justify-content-between">
     <h1 >Transaction</h1>
-    <button class="btn btn-primary" type="button" @onclick="OpenAddTodoDialog">
+    <button class="btn btn-primary" type="button" @onclick="OpenAddTransactionDialog">
         <span class="oi oi-plus" /> Add
     </button>
 </nav>
@@ -55,25 +57,25 @@
                 <div class="d-flex">
                     Transaction Name
                     <input type="search" class="form-control search" placeholder="Search" @oninput="SearchTaskName" />
-                    <a class='btn text-@(_sortBy == "taskName" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
-                       @onclick='()=>SortByHandler("taskName")'>
-                        <span class='oi oi-sort-@(_sortBy == "taskName" ? _sortDirection : "ascending")' />
+                    <a class='btn text-@(_transactionsortBy == "TransactionName" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
+                       @onclick='()=>SortByHandler("TransactionName")'>
+                        <span class='oi oi-sort-@(_transactionsortBy == "TransactionName" ? _transactionsortDirection : "ascending")' />
                     </a>
                 </div>
             </th>
             <th>
                 <div class="d-flex">
                     Transaction Type
-                    <a class='btn text-@(_sortBy == "transactionType" ? "primary" : "secondary")' @onclick='()=>SortByHandler("transactionType")'>
-                        <span class='oi oi-sort-@(_sortBy == "transactionType" ? _sortDirection : "ascending")' />
+                    <a class='btn text-@(_transactionsortBy == "transactionType" ? "primary" : "secondary")' @onclick='()=>SortByHandler("transactionType")'>
+                        <span class='oi oi-sort-@(_transactionsortBy == "transactionType" ? _transactionsortDirection : "ascending")' />
                     </a>
                 </div>
             </th>
             <th>
                 <div class="d-flex">
                     Amount
-                    <a class='btn text-@(_sortBy == "amount" ? "primary" : "secondary")' @onclick='()=>SortByHandler("amount")'>
-                        <span class='oi oi-sort-@(_sortBy == "amount" ? _sortDirection : "ascending")' />
+                    <a class='btn text-@(_transactionsortBy == "amount" ? "primary" : "secondary")' @onclick='()=>SortByHandler("amount")'>
+                        <span class='oi oi-sort-@(_transactionsortBy == "amount" ? _transactionsortDirection : "ascending")' />
                     </a>
                 </div>
             </th>
@@ -82,18 +84,18 @@
             <th>
                 <div class="d-flex">
                     Transact Date 
-                    <a class='btn text-@(_sortBy == "dueDate" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
+                    <a class='btn text-@(_transactionsortBy == "dueDate" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
                        @onclick='()=>SortByHandler("dueDate")'>
-                        <span class='oi oi-sort-@(_sortBy == "dueDate" ? _sortDirection : "ascending")' />
+                        <span class='oi oi-sort-@(_transactionsortBy == "dueDate" ? _transactionsortDirection : "ascending")' />
                     </a>
                 </div>
             </th>
             <th>
                 <div class="d-flex">
                     Created At
-                    <a class='btn text-@(_sortBy == "createdAt" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
+                    <a class='btn text-@(_transactionsortBy == "createdAt" ? "primary" : "secondary")' data-mdb-toggle="tooltip"
                        @onclick='()=>SortByHandler("createdAt")'>
-                        <span class='oi oi-sort-@(_sortBy == "createdAt" ? _sortDirection : "ascending")' />
+                        <span class='oi oi-sort-@(_transactionsortBy == "createdAt" ? _transactionsortDirection : "ascending")' />
                     </a>
                 </div>
             </th>
@@ -103,93 +105,100 @@
     <tbody>
         @{
                 
-            IEnumerable<TransactionItem> todoList = _todos;
+            IEnumerable<TransactionItem> transactionList = _transaction;
 
             if (_fromDate.HasValue)
             {
-                todoList = todoList.Where(t => t.DueDate.Date >= _fromDate.Value.Date);
+                transactionList = transactionList.Where(t => t.DueDate.Date >= _fromDate.Value.Date);
             }
             if (_toDate.HasValue)
             {
-                todoList = todoList.Where(t => t.DueDate.Date <= _toDate.Value.Date);
+                transactionList = transactionList.Where(t => t.DueDate.Date <= _toDate.Value.Date);
             }
 
 
             if (_selectedTransactionType != "All")
             {
                 var type = Enum.Parse<TransactionType>(_selectedTransactionType);
-                todoList = todoList.Where(t => t.TransactionType == type);
+                transactionList = transactionList.Where(t => t.TransactionType == type);
             }
 
             // Apply tag filter
             if (_selectedTag != "All")
             {
-                todoList = todoList.Where(t => t.Tags.Contains(_selectedTag));
+                transactionList = transactionList.Where(t => t.Tags.Contains(_selectedTag));
             }
-            if (_sortBy == "status")
+           
+            else if (_transactionsortBy == "TransactionName")
             {
-                todoList = _sortDirection == "ascending" ? todoList.OrderBy(t => t.IsDone) : todoList.OrderByDescending(t =>
-                t.IsDone);
+                transactionList = _transactionsortDirection == "ascending" ? transactionList.OrderBy(t => t.TransactionName) : transactionList.OrderByDescending(t =>
+                t.TransactionName);
             }
-            else if (_sortBy == "taskName")
+            else if (_transactionsortBy == "amount")
             {
-                todoList = _sortDirection == "ascending" ? todoList.OrderBy(t => t.TaskName) : todoList.OrderByDescending(t =>
-                t.TaskName);
+                transactionList = _transactionsortDirection == "ascending" ? transactionList.OrderBy(t => t.Amount) : transactionList.OrderByDescending(t =>
+                t.Amount);
             }
-            else if (_sortBy == "dueDate")
+            else if (_transactionsortBy == "transactionType")
             {
-                todoList = _sortDirection == "ascending" ? todoList.OrderBy(t => t.DueDate) : todoList.OrderByDescending(t =>
+                transactionList = _transactionsortDirection == "ascending" ? transactionList.OrderBy(t => t.TransactionType) : transactionList.OrderByDescending(t =>
+                t.TransactionType);
+            }
+            
+            else if (_transactionsortBy == "dueDate")
+            {
+                transactionList = _transactionsortDirection == "ascending" ? transactionList.OrderBy(t => t.DueDate) : transactionList.OrderByDescending(t =>
                 t.DueDate);
             }
-            else if (_sortBy == "createdAt")
+            else if (_transactionsortBy == "createdAt")
             {
-                todoList = _sortDirection == "ascending" ? todoList.OrderBy(t => t.CreatedAt) : todoList.OrderByDescending(t =>
+                transactionList = _transactionsortDirection == "ascending" ? transactionList.OrderBy(t => t.CreatedAt) : transactionList.OrderByDescending(t =>
                 t.CreatedAt);
             }
 
            
 
-            foreach (var todoItem in todoList)
+            foreach (var transactionItem in transactionList)
             {
                 <tr>
-                    
-                    <td class='@(todoItem.IsDone ? "text-decoration-line-through" : "")'>@todoItem.TaskName</td>
-                    <td>@todoItem.TransactionType</td>
-                    <td>@todoItem.Amount.ToString("C")</td>
-                    <td>@string.Join(", ", @todoItem.Tags)</td>
+
+                    <td>@transactionItem.TransactionName</td>
+                    <td>@transactionItem.TransactionType</td>
+                    <td>@transactionItem.Amount.ToString("C")</td>
+                    <td>@string.Join(", ", @transactionItem.Tags)</td>
                     <td>
-                        @if (!string.IsNullOrEmpty(todoItem.Notes))
+                        @if (!string.IsNullOrEmpty(transactionItem.Notes))
                         {
                             <span class="text-truncate d-inline-block" style="max-width: 200px;"
-                                  title="@todoItem.Notes">
-                                @todoItem.Notes
+                                  title="@transactionItem.Notes">
+                                @transactionItem.Notes
                             </span>
                         }
                     </td>
                     <td>
                         @{
-                            bool isToday = !todoItem.IsDone && todoItem.DueDate == DateTime.Today;
-                            bool isOlder = !todoItem.IsDone && todoItem.DueDate < DateTime.Today;
+                            bool isToday = !transactionItem.IsDone && transactionItem.DueDate == DateTime.Today;
+                            bool isOlder = !transactionItem.IsDone && transactionItem.DueDate < DateTime.Today;
                             <p class='small mb-0 @(isToday ? "text-warning" : isOlder ? "text-danger" : "")'>
                                 @if (isToday || isOlder)
                                 {
                                     <span class="oi oi-warning mr-3" />
                                 }
-                                @todoItem.DueDate.ToString("MMM dd, yyyy")
+                                @transactionItem.DueDate.ToString("MMM dd, yyyy")
                             </p>
                         }
                     </td>
                     <td>
                         <p class="small mb-0">
-                            @todoItem.CreatedAt.ToString("MMM dd, yyyy h:mm tt")
+                            @transactionItem.CreatedAt.ToString("MMM dd, yyyy h:mm tt")
                         </p>
                     </td>
                     <td>
-                        <button disabled="@todoItem.IsDone" class="btn btn-outline-secondary" type="button"
-                                @onclick="()=>OpenEditTodoDialog(todoItem)">
+                        <button disabled="@transactionItem.IsDone" class="btn btn-outline-secondary" type="button"
+                                @onclick="()=>OpenEditTodoDialog(transactionItem)">
                             <span class="oi oi-pencil" /> Edit
                         </button>
-                        <button class="btn btn-outline-danger" type="button" @onclick="()=>OpenDeleteTodoDialog(todoItem)">
+                        <button class="btn btn-outline-danger" type="button" @onclick="()=>OpenDeleteTransactionDialog(transactionItem)">
                             <span class="oi oi-delete" /> Delete
                         </button>
                     </td>
@@ -199,16 +208,16 @@
     </tbody>
 </table>
 
-@if (_showEditTodoDialog)
+@if (_showEditTransactionDialog)
 {
     <ModalDialog Title="@_dialogTitle" OnClose="@OnEditTodoDialogClose" OkLabel="@_dialogOkLabel">
         <div class="modal-container">
             <div class="form-floating mb-3">
-                <input id="taskName" type="text" class="form-control" @bind="_todoModel.TaskName" placeholder="Transaction Name" />
+                <input id="taskName" type="text" class="form-control" @bind="_transactionModel.TransactionName" placeholder="Transaction Name" />
                 <label for="taskName">Transaction Name </label>
             </div>
             <div class="form-floating mb-3">
-                <select class="form-select" @bind="_todoModel.TransactionType">
+                <select class="form-select" @bind="_transactionModel.TransactionType">
                     @foreach (var type in Enum.GetValues(typeof(TransactionType)))
                     {
                         <option value="@type">@type</option>
@@ -217,7 +226,7 @@
                 <label>Transaction Type</label>
             </div>
             <div class="form-floating mb-3">
-                <input type="number" step="0.01" class="form-control" @bind="_todoModel.Amount" placeholder="Amount" />
+                <input type="number" step="0.01" class="form-control" @bind="_transactionModel.Amount" placeholder="Amount" />
                 <label>Amount</label>
             </div>
             <div class="mb-3">
@@ -227,7 +236,7 @@
                     {
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox"
-                                   checked="@(_todoModel.Tags.Contains(tag))"
+                                   checked="@(_transactionModel.Tags.Contains(tag))"
                                    @onchange="@(e => ToggleTag(tag, (bool)e.Value))" />
                             <label class="form-check-label">@tag</label>
                         </div>
@@ -238,30 +247,30 @@
                 <textarea class="form-control"
                           style="height: 100px"
                           placeholder="Enter notes"
-                          @bind="_todoModel.Notes"></textarea>
+                          @bind="_transactionModel.Notes"></textarea>
                 <label>Notes (Optional)</label>
             </div>
             <div class="form-floating">
                 <label for="dueDate">Transaction Date</label>
                 <input id="dueDate" type="date" min='@DateTime.Today.ToString("yyyy-MM-dd")'
-                       value='@_todoModel.DueDate.ToString("yyyy-MM-dd")' @onchange="updateDate"
+                       value='@_transactionModel.DueDate.ToString("yyyy-MM-dd")' @onchange="updateDate"
                        class="form-control text-left" placeholder="Transaction Date" />
             </div>
-            @if (!string.IsNullOrEmpty(_editTodoErrorMessage))
+            @if (!string.IsNullOrEmpty(_editTransactionErrorMessage))
             {
-                <AlertMessage Type="danger" Message="@_editTodoErrorMessage" />
+                <AlertMessage Type="danger" Message="@_editTransactionErrorMessage" />
             }
         </div>
     </ModalDialog>
 }
 
-@if (_showDeleteTodoDialog)
+@if (_showDeleteTransactionDialog)
 {
-    <ModalDialog Title="Delete Todo" OnClose="@OnDeleteTodoDialogClose" OkLabel="Confirm">
-        <p>Are you sure you want to delete <strong>@_deleteTodo.TaskName</strong> task?</p>
-        @if (!string.IsNullOrEmpty(_deleteTodoErrorMessage))
+    <ModalDialog Title="Delete Todo" OnClose="@OnDeleteTransactionDialogClose" OkLabel="Confirm">
+        <p>Are you sure you want to delete <strong>@_deleteTransaction.TransactionName</strong> task?</p>
+        @if (!string.IsNullOrEmpty(_deleteTransactionErrorMessage))
         {
-            <AlertMessage Type="danger" Message="@_deleteTodoErrorMessage" />
+            <AlertMessage Type="danger" Message="@_deleteTransactionErrorMessage" />
         }
     </ModalDialog>
 }
@@ -269,20 +278,22 @@
 @code {
     [CascadingParameter]
     private GlobalState _globalState { get; set; }
-    private bool _showEditTodoDialog { get; set; }
-    private bool _showDeleteTodoDialog { get; set; }
-    private List<TransactionItem> _todos { get; set; }
-    private TransactionItem _deleteTodo { get; set; }
+    private bool _showEditTransactionDialog { get; set; }
+    private bool _showDeleteTransactionDialog { get; set; }
+    private List<TransactionItem> _transaction{ get; set; }
+    private TransactionItem _deleteTransaction { get; set; }
     private string _dialogTitle { get; set; }
     private string _dialogOkLabel { get; set; }
-    private string _editTodoErrorMessage { get; set; }
-    private string _deleteTodoErrorMessage { get; set; }
-    private TransactionItem _todoModel { get; set; }
-    private string _sortBy = "dueDate";
-    private string _sortDirection = "ascending";
+    private string _editTransactionErrorMessage { get; set; }
+    private string _deleteTransactionErrorMessage { get; set; }
+    private TransactionItem _transactionModel { get; set; }
+    private string _transactionsortBy = "dueDate";
+    private string _transactionsortDirection = "ascending";
     private DateTime? _fromDate;
     private DateTime? _toDate;
 
+
+    
     // Add this method with your other private methods
     private void ClearDateFilter()
     {
@@ -293,19 +304,19 @@
     
     protected override void OnInitialized()
     {
-        _todos = TransactionService.GetAll(_globalState.CurrentUser.UserId);
+        _transaction = TransactionService.GetAll(_globalState.CurrentUser.UserId);
     }
     
     private void SortByHandler(string sortByName)
     {
-        if (_sortBy == sortByName)
+        if (_transactionsortBy == sortByName)
         {
-            _sortDirection = _sortDirection == "ascending" ? "descending" : "ascending";
+            _transactionsortDirection = _transactionsortDirection == "ascending" ? "descending" : "ascending";
         }
         else
         {
-            _sortBy = sortByName;
-            _sortDirection = "ascending";
+            _transactionsortBy = sortByName;
+            _transactionsortDirection = "ascending";
         }
     }
     private List<string> _availableTags = new()
@@ -318,25 +329,25 @@
 
     private void ToggleTag(string tag, bool isChecked)
     {
-        if (isChecked && !_todoModel.Tags.Contains(tag))
+        if (isChecked && !_transactionModel.Tags.Contains(tag))
         {
-            _todoModel.Tags.Add(tag);
+            _transactionModel.Tags.Add(tag);
         }
-        else if (!isChecked && _todoModel.Tags.Contains(tag))
+        else if (!isChecked && _transactionModel.Tags.Contains(tag))
         {
-            _todoModel.Tags.Remove(tag);
+            _transactionModel.Tags.Remove(tag);
         }
     }
 
 
 
-    private void OpenAddTodoDialog()
+    private void OpenAddTransactionDialog()
     {
         _dialogTitle = "Add Transaction";
         _dialogOkLabel = "Add";
-        _todoModel = new TransactionItem();
-        _todoModel.Id = Guid.Empty;
-        _showEditTodoDialog = true;
+        _transactionModel = new TransactionItem();
+        _transactionModel.Id = Guid.Empty;
+        _showEditTransactionDialog = true;
     }
 
     private void SearchTaskName(ChangeEventArgs e)
@@ -344,12 +355,12 @@
         var searchTerm = e.Value.ToString();
         if (!string.IsNullOrEmpty(searchTerm) && searchTerm.Length > 2)
         {
-            _todos = TransactionService.GetAll(_globalState.CurrentUser.UserId).Where(t =>
-            t.TaskName.ToLower().Contains(searchTerm.ToLower())).ToList();
+            _transaction = TransactionService.GetAll(_globalState.CurrentUser.UserId).Where(t =>
+            t.TransactionName.ToLower().Contains(searchTerm.ToLower())).ToList();
         }
         else
         {
-            _todos = TransactionService.GetAll(_globalState.CurrentUser.UserId);
+            _transaction = TransactionService.GetAll(_globalState.CurrentUser.UserId);
         }
     }
 
@@ -358,70 +369,70 @@
         _dialogTitle = "Edit Transaction";
         _dialogOkLabel = "Save";
 
-        _todoModel = editTodo;
+        _transactionModel = editTodo;
 
-        _showEditTodoDialog = true;
+        _showEditTransactionDialog = true;
     }
 
-    private void OpenDeleteTodoDialog(TransactionItem todoItem)
+    private void OpenDeleteTransactionDialog(TransactionItem todoItem)
     {
-        _deleteTodo = todoItem;
-        _showDeleteTodoDialog = true;
+        _deleteTransaction = todoItem;
+        _showDeleteTransactionDialog = true;
     }
 
     private void updateDate(ChangeEventArgs e)
     {
-        _todoModel.DueDate = DateTime.Parse(e.Value.ToString());
+        _transactionModel.DueDate = DateTime.Parse(e.Value.ToString());
     }
     private void OnEditTodoDialogClose(bool isCancel)
     {
         if (isCancel)
         {
-            _showEditTodoDialog = false;
+            _showEditTransactionDialog = false;
         }
         else
         {
             try
             {
-                _editTodoErrorMessage = "";
-                if (_todoModel.Id == Guid.Empty)
+                _editTransactionErrorMessage = "";
+                if (_transactionModel.Id == Guid.Empty)
                 {
-                    _todos = TransactionService.Create(_globalState.CurrentUser.UserId, _todoModel.TaskName, _todoModel.DueDate, _todoModel.TransactionType, _todoModel.Amount, _todoModel.Tags, _todoModel.Notes);
+                    _transaction = TransactionService.Create(_globalState.CurrentUser.UserId, _transactionModel.TransactionName, _transactionModel.DueDate, _transactionModel.TransactionType, _transactionModel.Amount, _transactionModel.Tags, _transactionModel.Notes);
                 }
                 else
                 {
-                    _todos = TransactionService.Update(_globalState.CurrentUser.UserId, _todoModel.Id, _todoModel.TaskName, _todoModel.DueDate,
-                    _todoModel.IsDone, _todoModel.TransactionType, _todoModel.Amount, _todoModel.Tags, _todoModel.Notes);
+                    _transaction = TransactionService.Update(_globalState.CurrentUser.UserId, _transactionModel.Id, _transactionModel.TransactionName, _transactionModel.DueDate,
+                    _transactionModel.IsDone, _transactionModel.TransactionType, _transactionModel.Amount, _transactionModel.Tags, _transactionModel.Notes);
                 }
               
-                _showEditTodoDialog = false;
+                _showEditTransactionDialog = false;
             }
             catch (Exception e)
             {
-                _editTodoErrorMessage = e.Message;
+                _editTransactionErrorMessage = e.Message;
             }
         }
     }
-    private void OnDeleteTodoDialogClose(bool isCancel)
+    private void OnDeleteTransactionDialogClose(bool isCancel)
     {
         if (isCancel)
         {
 
-            _showDeleteTodoDialog = false;
-            _deleteTodo = null;
+            _showDeleteTransactionDialog = false;
+            _deleteTransaction = null;
         }
         else
         {
             try
             {
-                _deleteTodoErrorMessage = "";
-                _todos = TransactionService.Delete(_globalState.CurrentUser.UserId, _deleteTodo.Id);
-                _showDeleteTodoDialog = false;
-                _deleteTodo = null;
+                _deleteTransactionErrorMessage = "";
+                _transaction = TransactionService.Delete(_globalState.CurrentUser.UserId, _deleteTransaction.Id);
+                _showDeleteTransactionDialog = false;
+                _deleteTransaction = null;
             }
             catch (Exception e)
             {
-                _deleteTodoErrorMessage = e.Message;
+                _deleteTransactionErrorMessage = e.Message;
             }
         }
     }
