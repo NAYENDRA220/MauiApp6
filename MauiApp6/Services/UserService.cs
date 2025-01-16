@@ -7,6 +7,7 @@ namespace MauiApp6.Services
 {
     public static class UserService
     {
+        // Constants for the default admin user credentials.
         public const string SeedUsername = "admin";
         public const string SeedPassword = "admin";
 
@@ -15,11 +16,13 @@ namespace MauiApp6.Services
             string appDataDirectoryPath = Utils.GetAppDirectoryPath();
             string appUsersFilePath = Utils.GetAppUsersFilePath();
 
+            // Constants for the default admin user credentials.
+
             if (!Directory.Exists(appDataDirectoryPath))
             {
                 Directory.CreateDirectory(appDataDirectoryPath);
             }
-
+            // Serialize the user list to JSON and save it to the file.
             var json = JsonSerializer.Serialize(users);
             File.WriteAllText(appUsersFilePath, json);
         }
@@ -31,9 +34,8 @@ namespace MauiApp6.Services
             {
                 return new List<User>();
             }
-
+            // Read the JSON file and deserialize it into a list of users.
             var json = File.ReadAllText(appUsersFilePath);
-
             return JsonSerializer.Deserialize<List<User>>(json);
         }
 
@@ -46,7 +48,7 @@ namespace MauiApp6.Services
             {
                 throw new Exception("Username already exists.");
             }
-
+            // Add the new user to the list and save it.
             users.Add(
                 new User
                 {
@@ -62,11 +64,11 @@ namespace MauiApp6.Services
 
         public static void SeedUsers()
         {
-            var users = GetAll().FirstOrDefault(x => x.Currency == Currency.NPR);
+            var users = GetAll().FirstOrDefault(x => x.Currency == Currency.USD);
 
             if (users == null)
             {
-                Create(Guid.Empty, SeedUsername, SeedPassword, Currency.NPR);
+                Create(Guid.Empty, SeedUsername, SeedPassword, Currency.USD);
             }
         }
 

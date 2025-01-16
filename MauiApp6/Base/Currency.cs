@@ -8,7 +8,6 @@ namespace MauiApp6.Base
 {
     public enum Currency
     {  
-        NPR = 0,
-        USD=1,
+        USD=0,
     }
 }

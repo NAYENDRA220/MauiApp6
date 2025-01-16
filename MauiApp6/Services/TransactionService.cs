@@ -1,18 +1,17 @@
 ﻿
 using MauiApp6.Base;
 using MauiApp6.Model;
-using Microsoft.AspNetCore.Components;
-using System.Text.Json;
+using System.Text.Json;// Facilitates JSON serialization and deserialization
 
 
 namespace MauiApp6.Services;
 
 public static class TransactionService
 {
-    private static void SaveAll(Guid Id, List<TransactionItem> transactions)
+    private static void SaveAll(Guid userId, List<TransactionItem> transactions)
     {
         string appDataDirectoryPath = Utils.GetAppDirectoryPath();
-        string todosFilePath = Utils.GetTodosFilePath(Id);
+        string transactionFilePath = Utils.GetTransactionFilePath(userId);
 
         if (!Directory.Exists(appDataDirectoryPath))
         {
@@ -20,27 +19,28 @@ public static class TransactionService
         }
 
         var json = JsonSerializer.Serialize(transactions);
-        File.WriteAllText(todosFilePath, json);
+        File.WriteAllText(transactionFilePath, json);
     }
 
     public static List<TransactionItem> GetAll(Guid userId)
     {
-        string todosFilePath = Utils.GetTodosFilePath(userId);
-        if (!File.Exists(todosFilePath))
+        string transactionFilePath = Utils.GetTransactionFilePath(userId);
+        if (!File.Exists(transactionFilePath))
         {
             return new List<TransactionItem>();
         }
 
-        var json = File.ReadAllText(todosFilePath);
+        var json = File.ReadAllText(transactionFilePath);
 
         return JsonSerializer.Deserialize<List<TransactionItem>>(json);
     }
 
+    //Creates a new transaction for a user and adds it to their transaction list.
     public static List<TransactionItem> Create(Guid userId, string TransactionName, DateTime dueDate,
       TransactionType transactionType, decimal amount, List<string> tags, string notes)
     {
 
-       
+        // Validate that the due date is not in the past
         if (dueDate < DateTime.Today)
         {
             throw new Exception("Due date must be in the future.");
@@ -50,10 +50,20 @@ public static class TransactionService
         if (transactionType == TransactionType.Expense)
         {
             var trans = GetAll(userId);
-            decimal balance = trans.Where(t => t.TransactionType == TransactionType.Income).Sum(t => t.Amount) +
-                             trans.Where(t => t.TransactionType == TransactionType.Debt).Sum(t => t.Amount) -
-                             trans.Where(t => t.TransactionType == TransactionType.Expense).Sum(t => t.Amount);
+            var debts = DebtService.GetAll(userId);
 
+            // Calculate total income (including debts/loans received)
+            decimal totalIncome = trans.Where(t => t.TransactionType == TransactionType.Income).Sum(t => t.Amount);
+                                
+
+            // Calculate total expenses
+            decimal totalExpenses = trans.Where(t => t.TransactionType == TransactionType.Expense).Sum(t => t.Amount);
+
+            // Calculate total paid debts
+            decimal totalPaidDebts = debts.Where(d => d.IsPaid).Sum(d => d.Amount);
+
+            // Calculate final balance
+            decimal balance = totalIncome - totalExpenses - totalPaidDebts;
             if (balance < amount)
             {
                 throw new Exception($"Insufficient balance. Available: {balance:C}, Required: {amount:C}");
@@ -83,7 +93,7 @@ public static class TransactionService
 
         if (transactions == null)
         {
-            throw new Exception("Todo not found.");
+            throw new Exception("Transaction data not found.");
         }
 
         transactions.Remove(transaction);
@@ -93,34 +103,34 @@ public static class TransactionService
 
     public static void DeleteByUserId(Guid userId)
     {
-        string todosFilePath = Utils.GetTodosFilePath(userId);
-        if (File.Exists(todosFilePath))
+        string transactionFilePath = Utils.GetTransactionFilePath(userId);
+        if (File.Exists(transactionFilePath))
         {
-            File.Delete(todosFilePath);
+            File.Delete(transactionFilePath);
         }
     }
 
     public static List<TransactionItem> Update(Guid userId, Guid id, string TransactionName,
     DateTime dueDate, bool isDone, TransactionType transactionType, decimal amount, List<string> tags, string notes)
     {
-        List<TransactionItem> todos = GetAll(userId);
-        TransactionItem todoToUpdate = todos.FirstOrDefault(x => x.Id == id);
+        List<TransactionItem> transactions = GetAll(userId);
+        TransactionItem transactionToUpdate = transactions.FirstOrDefault(x => x.Id == id);
 
-        if (todoToUpdate == null)
+        if (transactionToUpdate == null)
         {
-            throw new Exception("Todo not found.");
+            throw new Exception("Transaction data not found.");
         }
 
-        todoToUpdate.TransactionName = TransactionName;
-        todoToUpdate.IsDone = isDone;
-        todoToUpdate.DueDate = dueDate;
-        todoToUpdate.TransactionType = transactionType;
-        todoToUpdate.Amount = amount;
-        todoToUpdate.Tags = tags;
-        todoToUpdate.Notes = notes;
+        transactionToUpdate.TransactionName = TransactionName;
+        transactionToUpdate.IsDone = isDone;
+        transactionToUpdate.DueDate = dueDate;
+        transactionToUpdate.TransactionType = transactionType;
+        transactionToUpdate.Amount = amount;
+        transactionToUpdate.Tags = tags;
+        transactionToUpdate.Notes = notes;
         
-        SaveAll(userId, todos);
-        return todos;
+        SaveAll(userId, transactions);
+        return transactions;
     }
 }
 

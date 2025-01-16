@@ -2,11 +2,7 @@
 using MauiApp6.Model;
 using MauiApp6.Services;
 using Microsoft.AspNetCore.Components;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace MauiApp6.Components.Pages
 {
@@ -40,7 +36,7 @@ namespace MauiApp6.Components.Pages
                 _globalState.CurrentUser = UserService.Login(_username, _password);
                 if (_globalState.CurrentUser != null)
                 {
-                    Nav.NavigateTo(_globalState.CurrentUser.HasInitialPassword ? "/change-password" : "/");
+                    Nav.NavigateTo(_globalState.CurrentUser.HasInitialPassword ? "/change-password" : "/dashboard");
                 }
             }
             catch (Exception e)

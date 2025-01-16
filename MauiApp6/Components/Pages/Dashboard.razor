@@ -17,7 +17,7 @@
 
 
 
-<div class="container mt-4">
+<div class="container1 mt-4">
     <h3 class="text-primary mb-4">Financial Overview</h3>
 
     <div class="row">
@@ -154,11 +154,36 @@
         </div>
     </div>
 </div>
-<div class="col-md-12">
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title text-light">Highest Transactions</h5>
-            <Chart @ref="_highestTransactionsChart" Config="_highestTransactionsConfig" />
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title text-light">Top 5 Items</h5>
+
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="text-light">View</label>
+                            <select class="form-control" @bind="_selectedView" @bind:after="UpdateTopTransactionsChart">
+                                <option value="highest">Highest</option>
+                                <option value="lowest">Lowest</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="text-light">Type</label>
+                            <select class="form-control" @bind="_selectedType" @bind:after="UpdateTopTransactionsChart">
+                                <option value="income">Income</option>
+                                <option value="expense">Expense</option>
+                                <option value="debt">Debt</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <Chart @ref="_topTransactionsChart" Config="_topTransactionsConfig" />
+            </div>
         </div>
     </div>
 </div>
@@ -166,359 +191,3 @@
 
 
 
-
-@code {
-    [CascadingParameter]
-    private GlobalState _globalState { get; set; }
-    private List<TransactionItem> _transactions = new();
-    private List<DebtItem> _debts = new();
-    private Chart _pieChart;
-    private Chart _barChart;
-    private Chart _lineChart;
-    private PieConfig _pieChartConfig;
-    private BarConfig _barChartConfig;
-    private LineConfig _lineChartConfig;
-    private Chart _highestTransactionsChart;
-    private BarConfig _highestTransactionsConfig;
-    
-
-
-    protected override void OnInitialized()
-    {
-        _transactions = TransactionService.GetAll(_globalState.CurrentUser.UserId);
-
-        _debts = DebtService.GetAll(_globalState.CurrentUser.UserId);
-        InitializeCharts();
-        UpdateLineChart();
-      
-        
-    }
-   
-
-    private decimal GetTotalByType(TransactionType type)
-    {
-        return _transactions
-            .Where(t => t.TransactionType == type)
-            .Sum(t => t.Amount);
-    }
-
-    private decimal GetTotalPaidDebts()
-    {
-        return _debts
-            .Where(d => d.IsPaid)
-            .Sum(d => d.Amount);
-    }
-
-    private decimal GetTotalUnpaidDebts()
-    {
-        return _debts
-            .Where(d => !d.IsPaid)
-            .Sum(d => d.Amount);
-    }
-
-    private decimal GetTotalDebtsByType(DebtType type)
-    {
-        return _debts
-            .Where(d => d.DebtType == type)
-            .Sum(d => d.Amount);
-    }
-
-    private decimal GetPaidDebtsByType(DebtType type)
-    {
-        return _debts
-            .Where(d => d.DebtType == type && d.IsPaid)
-            .Sum(d => d.Amount);
-    }
-
-    private decimal GetUnpaidDebtsByType(DebtType type)
-    {
-        return _debts
-            .Where(d => d.DebtType == type && !d.IsPaid)
-            .Sum(d => d.Amount);
-    }
-
-
-    private decimal GetAvailableBalance()
-    {
-        decimal transactionBalance = GetTotalByType(TransactionType.Income) -
-                                   GetTotalByType(TransactionType.Expense);
-
-        decimal paidDebts = _debts
-            .Where(d => d.IsPaid )
-            .Sum(d => d.Amount);
-
-        decimal unpaidLoans = _debts
-            .Where(d => !d.IsPaid && d.DebtType == DebtType.Loan)
-            .Sum(d => d.Amount);
-
-        return transactionBalance - paidDebts ;
-    }
-   
- 
-   
-
-    private void InitializeCharts()
-    {
-        InitializePieChart();
-        InitializeBarChart();
-        InitializeLineChart();
-        InitializeHighestTransactionsChart();
-     
-    }
-
-    private void InitializePieChart()
-    {
-        _pieChartConfig = new PieConfig
-            {
-                Options = new PieOptions
-                {
-                    Responsive = true,
-                    Title = new OptionsTitle
-                    {
-                        Display = true,
-                        Text = "Debt Distribution by Type"
-                    }
-                }
-            };
-
-        var debtTypes = Enum.GetValues(typeof(DebtType));
-        foreach (DebtType type in debtTypes)
-        {
-            _pieChartConfig.Data.Labels.Add(type.ToString());
-        }
-
-        var pieDataset = new PieDataset<decimal>
-            {
-                BackgroundColor = new[]
-                    {
-                ColorUtil.ColorHexString(255, 99, 132),
-                ColorUtil.ColorHexString(54, 162, 235),
-                ColorUtil.ColorHexString(255, 206, 86),
-                ColorUtil.ColorHexString(75, 192, 192)
-            },
-                BorderWidth = 1
-            };
-
-        foreach (DebtType type in debtTypes)
-        {
-            pieDataset.Add(GetTotalDebtsByType(type));
-        }
-
-        _pieChartConfig.Data.Datasets.Add(pieDataset);
-    }
-
-    private void InitializeBarChart()
-    {
-        _barChartConfig = new BarConfig
-            {
-                Options = new BarOptions
-                {
-                    Responsive = true,
-                    Title = new OptionsTitle
-                    {
-                        Display = true,
-                        Text = "Income vs Expense Overview"
-                    },
-                    Scales = new BarScales
-                    {
-                        YAxes = new List<CartesianAxis>
-                    {
-                        new LinearCartesianAxis
-                        {
-                            Ticks = new LinearCartesianTicks
-                            {
-                                BeginAtZero = true
-                            }
-                        }
-                    }
-                    }
-                }
-            };
-
-        foreach (var label in new[] { "Income", "Expense" })
-        {
-            _barChartConfig.Data.Labels.Add(label);
-        }
-
-        var barDataset = new BarDataset<decimal>
-            {
-                Label = "Amount",
-                BackgroundColor = new[]
-                    {
-                ColorUtil.ColorHexString(75, 192, 192),
-                ColorUtil.ColorHexString(255, 99, 132)
-            },
-                BorderWidth = 1
-            };
-
-        barDataset.Add(GetTotalByType(TransactionType.Income));
-        barDataset.Add(GetTotalByType(TransactionType.Expense));
-
-        _barChartConfig.Data.Datasets.Add(barDataset);
-    }
-    private DateTime StartDate { get; set; } = DateTime.Now.AddMonths(-1);
-    private DateTime EndDate { get; set; } = DateTime.Now;
-
-    private void ResetDateRange()
-    {
-        StartDate = DateTime.Now.AddMonths(-1);
-        EndDate = DateTime.Now;
-        UpdateLineChart();
-    }
-
-
-    private void UpdateLineChart()
-    {
-        if (EndDate < StartDate)
-        {
-            EndDate = StartDate.AddDays(1);
-        }
-
-        // Clear existing datasets
-        _lineChartConfig.Data.Datasets.Clear();
-
-        var filteredTransactions = _transactions
-            .Where(t => t.CreatedAt.Date >= StartDate.Date && t.CreatedAt.Date <= EndDate.Date)
-            .OrderBy(t => t.CreatedAt)
-            .GroupBy(t => t.CreatedAt.Date)
-            .Select(g => new
-            {
-                Date = g.Key,
-                Income = g.Where(t => t.TransactionType == TransactionType.Income).Sum(t => t.Amount),
-                Expense = g.Where(t => t.TransactionType == TransactionType.Expense).Sum(t => t.Amount),
-                Debt = g.Where(t => t.TransactionType == TransactionType.Debt).Sum(t => t.Amount)
-            })
-            .ToList();
-
-        var incomeDataset = new LineDataset<TimePoint>
-            {
-                Label = "Income",
-                BorderColor = ColorUtil.ColorHexString(75, 192, 192),
-                Fill = false
-            };
-
-        var expenseDataset = new LineDataset<TimePoint>
-            {
-                Label = "Expense",
-                BorderColor = ColorUtil.ColorHexString(255, 99, 132),
-                Fill = false
-            };
-
-        var debtDataset = new LineDataset<TimePoint>
-            {
-                Label = "Debt",
-                BorderColor = ColorUtil.ColorHexString(255, 206, 86),
-                Fill = false
-            };
-
-        foreach (var data in filteredTransactions)
-        {
-            incomeDataset.Add(new TimePoint(data.Date, Convert.ToDouble(data.Income)));
-            expenseDataset.Add(new TimePoint(data.Date, Convert.ToDouble(data.Expense)));
-            debtDataset.Add(new TimePoint(data.Date, Convert.ToDouble(data.Debt)));
-        }
-
-        _lineChartConfig.Data.Datasets.Add(incomeDataset);
-        _lineChartConfig.Data.Datasets.Add(expenseDataset);
-        _lineChartConfig.Data.Datasets.Add(debtDataset);
-
-        StateHasChanged();
-    }
-
-    private void InitializeLineChart()
-    {
-        _lineChartConfig = new LineConfig
-            {
-                Options = new LineOptions
-                {
-                    Responsive = true,
-                    Title = new OptionsTitle
-                    {
-                        Display = true,
-                        Text = "Transaction History Over Time"
-                    },
-                    Scales = new Scales
-                    {
-                        XAxes = new List<CartesianAxis>
-                    {
-                        new TimeAxis
-                        {
-                            Distribution = TimeDistribution.Linear,
-                            Time = new TimeOptions
-                            {
-                                Unit = TimeMeasurement.Day,
-                                DisplayFormats = new Dictionary<TimeMeasurement, string>
-                                {
-                                    { TimeMeasurement.Day, "MMM dd" }
-                                }
-                            }
-                        }
-                    }
-                    }
-                }
-            };
-    }
-
-    private decimal GetHighestTransaction(TransactionType type)
-    {
-        return _transactions
-            .Where(t => t.TransactionType == type)
-            .OrderByDescending(t => t.Amount)
-            .FirstOrDefault()?.Amount ?? 0;
-    }
-
-    private void InitializeHighestTransactionsChart()
-    {
-        _highestTransactionsConfig = new BarConfig
-            {
-                Options = new BarOptions
-                {
-                    Responsive = true,
-                    Title = new OptionsTitle
-                    {
-                        Display = true,
-                        Text = "Highest Transactions by Category"
-                    },
-                    Scales = new BarScales
-                    {
-                        YAxes = new List<CartesianAxis>
-                    {
-                        new LinearCartesianAxis
-                        {
-                            Ticks = new LinearCartesianTicks
-                            {
-                                BeginAtZero = true
-                            }
-                        }
-                    }
-                    }
-                }
-            };
-
-        // Add labels for each transaction type
-        foreach (var label in new[] { "Income", "Expense", "Debt" })
-        {
-            _highestTransactionsConfig.Data.Labels.Add(label);
-        }
-
-        var highestTransactionsDataset = new BarDataset<decimal>
-            {
-                Label = "Highest Amount",
-                BackgroundColor = new[]
-                {
-                ColorUtil.ColorHexString(75, 192, 192),  // Green for Income
-                ColorUtil.ColorHexString(255, 99, 132),  // Red for Expense
-                ColorUtil.ColorHexString(255, 206, 86)   // Yellow for Debt
-            },
-                BorderWidth = 1
-            };
-
-        // Add the highest transaction for each type
-        highestTransactionsDataset.Add(GetHighestTransaction(TransactionType.Income));
-        highestTransactionsDataset.Add(GetHighestTransaction(TransactionType.Expense));
-        highestTransactionsDataset.Add(GetHighestTransaction(TransactionType.Debt));
-
-        _highestTransactionsConfig.Data.Datasets.Add(highestTransactionsDataset);
-    }
-}
-}

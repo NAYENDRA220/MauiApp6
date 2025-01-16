@@ -10,7 +10,7 @@
 </nav>
 <div class="d-flex gap-3 my-3">
     <div class="form-floating">
-        <select class="form-select" @bind="_selectedTransactionType">
+        <select class="form-select" @bind="_selectedTransactionType" style="padding-top: 1.5rem;">
             <option value="All">All Types</option>
             @foreach (var type in Enum.GetValues(typeof(TransactionType)))
             {
@@ -210,7 +210,7 @@
 
 @if (_showEditTransactionDialog)
 {
-    <ModalDialog Title="@_dialogTitle" OnClose="@OnEditTodoDialogClose" OkLabel="@_dialogOkLabel">
+    <ModalDialog Title="@_dialogTitle" OnClose="@OnEditTransactionDialogClose" OkLabel="@_dialogOkLabel">
         <div class="modal-container">
             <div class="form-floating mb-3">
                 <input id="taskName" type="text" class="form-control" @bind="_transactionModel.TransactionName" placeholder="Transaction Name" />
@@ -250,11 +250,11 @@
                           @bind="_transactionModel.Notes"></textarea>
                 <label>Notes (Optional)</label>
             </div>
-            <div class="form-floating">
-                <label for="dueDate">Transaction Date</label>
+            <div class="form-floating mb-3 ">
                 <input id="dueDate" type="date" min='@DateTime.Today.ToString("yyyy-MM-dd")'
                        value='@_transactionModel.DueDate.ToString("yyyy-MM-dd")' @onchange="updateDate"
                        class="form-control text-left" placeholder="Transaction Date" />
+                <label for="dueDate">Transaction Date</label>
             </div>
             @if (!string.IsNullOrEmpty(_editTransactionErrorMessage))
             {
@@ -266,7 +266,7 @@
 
 @if (_showDeleteTransactionDialog)
 {
-    <ModalDialog Title="Delete Todo" OnClose="@OnDeleteTransactionDialogClose" OkLabel="Confirm">
+    <ModalDialog Title="Delete Transaction" OnClose="@OnDeleteTransactionDialogClose" OkLabel="Confirm">
         <p>Are you sure you want to delete <strong>@_deleteTransaction.TransactionName</strong> task?</p>
         @if (!string.IsNullOrEmpty(_deleteTransactionErrorMessage))
         {
@@ -275,167 +275,4 @@
     </ModalDialog>
 }
 
-@code {
-    [CascadingParameter]
-    private GlobalState _globalState { get; set; }
-    private bool _showEditTransactionDialog { get; set; }
-    private bool _showDeleteTransactionDialog { get; set; }
-    private List<TransactionItem> _transaction{ get; set; }
-    private TransactionItem _deleteTransaction { get; set; }
-    private string _dialogTitle { get; set; }
-    private string _dialogOkLabel { get; set; }
-    private string _editTransactionErrorMessage { get; set; }
-    private string _deleteTransactionErrorMessage { get; set; }
-    private TransactionItem _transactionModel { get; set; }
-    private string _transactionsortBy = "dueDate";
-    private string _transactionsortDirection = "ascending";
-    private DateTime? _fromDate;
-    private DateTime? _toDate;
 
-
-    
-    // Add this method with your other private methods
-    private void ClearDateFilter()
-    {
-        _fromDate = null;
-        _toDate = null;
-    }
-
-    
-    protected override void OnInitialized()
-    {
-        _transaction = TransactionService.GetAll(_globalState.CurrentUser.UserId);
-    }
-    
-    private void SortByHandler(string sortByName)
-    {
-        if (_transactionsortBy == sortByName)
-        {
-            _transactionsortDirection = _transactionsortDirection == "ascending" ? "descending" : "ascending";
-        }
-        else
-        {
-            _transactionsortBy = sortByName;
-            _transactionsortDirection = "ascending";
-        }
-    }
-    private List<string> _availableTags = new()
-    {
-    "Yearly", "Monthly", "Food & Drinks", "Clothes", "Gadgets", "Miscellaneous"
-    };
-
-    private string _selectedTransactionType = "All";
-    private string _selectedTag = "All";
-
-    private void ToggleTag(string tag, bool isChecked)
-    {
-        if (isChecked && !_transactionModel.Tags.Contains(tag))
-        {
-            _transactionModel.Tags.Add(tag);
-        }
-        else if (!isChecked && _transactionModel.Tags.Contains(tag))
-        {
-            _transactionModel.Tags.Remove(tag);
-        }
-    }
-
-
-
-    private void OpenAddTransactionDialog()
-    {
-        _dialogTitle = "Add Transaction";
-        _dialogOkLabel = "Add";
-        _transactionModel = new TransactionItem();
-        _transactionModel.Id = Guid.Empty;
-        _showEditTransactionDialog = true;
-    }
-
-    private void SearchTaskName(ChangeEventArgs e)
-    {
-        var searchTerm = e.Value.ToString();
-        if (!string.IsNullOrEmpty(searchTerm) && searchTerm.Length > 2)
-        {
-            _transaction = TransactionService.GetAll(_globalState.CurrentUser.UserId).Where(t =>
-            t.TransactionName.ToLower().Contains(searchTerm.ToLower())).ToList();
-        }
-        else
-        {
-            _transaction = TransactionService.GetAll(_globalState.CurrentUser.UserId);
-        }
-    }
-
-    private void OpenEditTodoDialog(TransactionItem editTodo)
-    {
-        _dialogTitle = "Edit Transaction";
-        _dialogOkLabel = "Save";
-
-        _transactionModel = editTodo;
-
-        _showEditTransactionDialog = true;
-    }
-
-    private void OpenDeleteTransactionDialog(TransactionItem todoItem)
-    {
-        _deleteTransaction = todoItem;
-        _showDeleteTransactionDialog = true;
-    }
-
-    private void updateDate(ChangeEventArgs e)
-    {
-        _transactionModel.DueDate = DateTime.Parse(e.Value.ToString());
-    }
-    private void OnEditTodoDialogClose(bool isCancel)
-    {
-        if (isCancel)
-        {
-            _showEditTransactionDialog = false;
-        }
-        else
-        {
-            try
-            {
-                _editTransactionErrorMessage = "";
-                if (_transactionModel.Id == Guid.Empty)
-                {
-                    _transaction = TransactionService.Create(_globalState.CurrentUser.UserId, _transactionModel.TransactionName, _transactionModel.DueDate, _transactionModel.TransactionType, _transactionModel.Amount, _transactionModel.Tags, _transactionModel.Notes);
-                }
-                else
-                {
-                    _transaction = TransactionService.Update(_globalState.CurrentUser.UserId, _transactionModel.Id, _transactionModel.TransactionName, _transactionModel.DueDate,
-                    _transactionModel.IsDone, _transactionModel.TransactionType, _transactionModel.Amount, _transactionModel.Tags, _transactionModel.Notes);
-                }
-              
-                _showEditTransactionDialog = false;
-            }
-            catch (Exception e)
-            {
-                _editTransactionErrorMessage = e.Message;
-            }
-        }
-    }
-    private void OnDeleteTransactionDialogClose(bool isCancel)
-    {
-        if (isCancel)
-        {
-
-            _showDeleteTransactionDialog = false;
-            _deleteTransaction = null;
-        }
-        else
-        {
-            try
-            {
-                _deleteTransactionErrorMessage = "";
-                _transaction = TransactionService.Delete(_globalState.CurrentUser.UserId, _deleteTransaction.Id);
-                _showDeleteTransactionDialog = false;
-                _deleteTransaction = null;
-            }
-            catch (Exception e)
-            {
-                _deleteTransactionErrorMessage = e.Message;
-            }
-        }
-    }
-    
-    
-}

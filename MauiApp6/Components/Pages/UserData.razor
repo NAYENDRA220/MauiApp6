@@ -1,10 +1,10 @@
-﻿@page "/users"
+﻿@page "/users"﻿
 @using MauiApp6.Components.Layout
 
 <nav class="navbar navbar-light bg-light justify-content-between">
     <h1 class="navbar-brand mb-0 h1">Users</h1>
     <button class="btn btn-primary" type="button" @onclick="OpenAddUserDialog">
-        <span class="oi oi-plus" /> Add
+         Add
     </button>
 </nav>
 <table class="table">
@@ -54,15 +54,11 @@
             <label for="floatingPassword">Password</label>
         </div>
         <div class="form-check">
-            <input id="userRole" type="radio" class="form-check-input" name="Currency" value="@Currency.NPR"
-                       @onchange="RoleChangeHandler" checked="@(_role == Currency.NPR)">
-                <label class="form-check-label" for="userRole">@Currency.NPR</label>
-        </div>
-        <div class="form-check">
-            <input id="adminRole" type="radio" class="form-check-input" name="role" value="@Currency.USD"
+            <input id="userRole" type="radio" class="form-check-input" name="Currency" value="@Currency.USD"
                        @onchange="RoleChangeHandler" checked="@(_role == Currency.USD)">
-                <label class="form-check-label" for="adminRole">@Currency.USD</label>
+                <label class="form-check-label" for="userRole">@Currency.USD</label>
         </div>
+        
         @if (!string.IsNullOrEmpty(_addUserErrorMessage))
             {
                 <AlertMessage Type="danger" Message="@_addUserErrorMessage" />
@@ -105,7 +101,7 @@
         _showAddUserDialog = true;
         _username = "";
         _password = "";
-        _role = Currency.NPR;
+        _role = Currency.USD;
     }
     private void OnAddUserDialogClose(bool isCancel)
     {
@@ -163,3 +159,29 @@
         }
     }
 }
+<style>
+    .table {
+    background-color: #ffffff; /* White background for the table */
+    color: #000000; /* Black text for readability */
+    border-radius: 8px; /* Optional: Add rounded corners */
+    overflow: hidden; /* Prevent content overflow on rounded corners */
+}
+
+.table th {
+    background-color: #f0f0f0; /* Light gray for the header row */
+    color: #000000; /* Black text for headers */
+    font-weight: bold;
+}
+
+.table td {
+    color: #333333; /* Dark gray for cell text */
+}
+
+.table tr:hover {
+    background-color: #f9f9f9; /* Light gray hover effect */
+}
+
+.table-bordered {
+    border: 1px solid #ddd; /* Optional: Add borders to table */
+}
+</style>

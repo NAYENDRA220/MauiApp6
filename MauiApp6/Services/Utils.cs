@@ -6,6 +6,7 @@ namespace MauiApp6.Services
     {
 
 
+        // Delimiter used to separate segments in the hash string representation.
         private const char _segmentDelimiter = ':';
 
         public static string HashSecret(string input)
@@ -28,6 +29,7 @@ namespace MauiApp6.Services
 
         public static bool VerifyHash(string input, string hashString)
         {
+            // Generate a random salt.// Derive the hash using PBKDF2.
             string[] segments = hashString.Split(_segmentDelimiter);
             byte[] hash = Convert.FromHexString(segments[0]);
             byte[] salt = Convert.FromHexString(segments[1]);
@@ -46,9 +48,10 @@ namespace MauiApp6.Services
 
         public static string GetAppDirectoryPath()
         {
+            // Combine the special folder path for application data with the app-specific folder name.
             return Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "Islington-Todo"
+                "Transactions"
             );
         }
 
@@ -57,9 +60,9 @@ namespace MauiApp6.Services
             return Path.Combine(GetAppDirectoryPath(), "users.json");
         }
 
-        public static string GetTodosFilePath(Guid userId)
+        public static string GetTransactionFilePath(Guid userId)
         {
-            return Path.Combine(GetAppDirectoryPath(), $"transactions_{userId}.json");
+            return Path.Combine(GetAppDirectoryPath(), userId.ToString() + "_transactions.json");
         }
 
         // New method for debts
